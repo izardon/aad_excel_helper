@@ -19,14 +19,12 @@ public class XLSXWriter {
 
     public void write(String fileName, List<Map<String, String>> data) {
         sortData(data);
-        System.out.println(xlsxData);
         processStateImmutableAnomaly(xlsxData);
-        
+
         writeFile(fileName);
     }
 
     private void processStateImmutableAnomaly(List<Map<String, String>> data) {
-        System.out.println(data);
         Sheet sheet = workbook.createSheet("StateImmutableAnomaly");
         List<String> headRowText;
         if(data.get(0).containsKey("Repeated Anomaly")) {
