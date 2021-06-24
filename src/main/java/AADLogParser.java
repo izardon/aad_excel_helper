@@ -17,7 +17,7 @@ public class AADLogParser {
                 if(value.contains("min")) {
                     value = value.split("min")[0].trim();
                 } else if(value.contains("h")) {
-                    value = String.valueOf(Integer.parseInt(value.split("h")[0].trim()) * 60);
+                    value = String.valueOf(Double.parseDouble(value.split("h")[0].trim()) * 60);
                 }
             } else if (key.equals("Repeat Anomalies")) {// AAD 新舊 Log 的內容文字不一樣
                 key = "Repeated Anomaly";
