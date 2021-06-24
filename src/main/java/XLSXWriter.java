@@ -32,7 +32,18 @@ public class XLSXWriter {
         
         setHeadRowText(sheet, headRowText);
         int rowNum = 1;
+
         for(Map<String, String> rowText : data) {
+            if(Arrays.asList(AADSheetName.STATE_IMMUTABLE_ANOMALY.getSheetName(), AADSheetName.STATE_IMMUTABLE_CRASH.getSheetName()).contains(sheetName)) {
+                if (!Arrays.asList("RotateOperation","ExitAndReenterOperation").contains(rowText.get("Operation"))) {
+                    continue;
+                }
+            }
+            else if(Arrays.asList(AADSheetName.EVENT_CHANGING_ANOMALY.getSheetName()).contains(sheetName)) {
+                if (!Arrays.asList("EmptyStringOperation","InputZeroOperation", "RandomAsciiOperation", "RandomUTFOperation", "RandomLongStringOperation").contains(rowText.get("Operation"))) {
+                    continue;
+                }
+            }
             setRowText(sheet, headRowText, rowText, rowNum);
             rowNum++;
         }
@@ -42,7 +53,7 @@ public class XLSXWriter {
         List<String> headRowText = null;
 
         if(sheetName.equals(AADSheetName.STATE_IMMUTABLE_ANOMALY.getSheetName())) {
-            headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total Injected Operations", "Unique Anomaly");
+            headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total Injected Operations", "Unique Anomaly", "Repeated Anomaly", "Unexpected Anomaly");
         } else if(sheetName.equals(AADSheetName.STATE_IMMUTABLE_CRASH.getSheetName())) {
             headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total TestRun", "Total Injected Operations", "Crash", "Repeated Crash", "Unique Crash");
         } else if(sheetName.equals(AADSheetName.EVENT_CHANGING_ANOMALY.getSheetName())) {
@@ -53,29 +64,19 @@ public class XLSXWriter {
 
     private void setHeadRowText(Sheet sheet, List<String> headRowText) {
         Row row = sheet.createRow(0);
-        int index = 0;
+        int columnIdx = 0;
         for(String text : headRowText) {
-            row.createCell(index).setCellValue(text);
-            index++;
+            row.createCell(columnIdx).setCellValue(text);
+            columnIdx++;
         }
     }
 
     private void setRowText(Sheet sheet, List<String> headRowText, Map<String, String> rowText, int rowNum) {
-        if(Arrays.asList(AADSheetName.STATE_IMMUTABLE_ANOMALY.getSheetName(), AADSheetName.STATE_IMMUTABLE_CRASH.getSheetName()).contains(sheet.getSheetName())) {
-            if (!Arrays.asList("RotateOperation","ExitAndReenterOperation").contains(rowText.get("Operation"))) {
-                return;
-            }
-        } else if(Arrays.asList(AADSheetName.EVENT_CHANGING_ANOMALY.getSheetName()).contains(sheet.getSheetName())) {
-            if (!Arrays.asList("EmptyStringOperation","InputZeroOperation", "RandomAsciiOperation", "RandomUTFOperation", "RandomLongStringOperation").contains(rowText.get("Operation"))) {
-                return;
-            }
-        }
-
         Row row = sheet.createRow(rowNum);
-        int index = 0;
+        int columnIdx = 0;
         for(String headText : headRowText) {
-            row.createCell(index).setCellValue(rowText.get(headText));
-            index++;
+            row.createCell(columnIdx).setCellValue(rowText.get(headText));
+            columnIdx++;
         }
     }
 
