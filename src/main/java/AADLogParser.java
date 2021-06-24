@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +28,15 @@ public class AADLogParser {
             result.put(key, value);
         });
 
-        String uniqueAnomaly = String.valueOf(Integer.parseInt(result.get("Anomaly")) - Integer.parseInt(result.get("Repeated Anomaly")));
-        String uniqueCrash = String.valueOf(Integer.parseInt(result.get("Crash")) - Integer.parseInt(result.get("Repeated Crash")));
-        result.put("Unique Anomaly", uniqueAnomaly);
-        result.put("Unique Crash", uniqueCrash);
+        if(result.containsKey("Repeated Anomaly")) {
+            String uniqueAnomaly = String.valueOf(Integer.parseInt(result.get("Anomaly")) - Integer.parseInt(result.get("Repeated Anomaly")));
+            result.put("Unique Anomaly", uniqueAnomaly);
+        }
+        if(result.containsKey("Repeated Crash")) {
+            String uniqueCrash = String.valueOf(Integer.parseInt(result.get("Crash")) - Integer.parseInt(result.get("Repeated Crash")));
+            result.put("Unique Crash", uniqueCrash);
+        }
+
     }
 
     private void parsePath(String path) {

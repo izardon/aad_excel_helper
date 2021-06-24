@@ -4,24 +4,24 @@ import java.util.*;
 
 public class AADLogReader {
     private List<String> lines;
+    private boolean isValidLog;
 
     public void read(String path) {
         lines = new ArrayList<>();
-        int lineNumber = 1;
+        isValidLog = false;
 
         try {
             File log = new File(path);
             Scanner myReader = new Scanner(log);
 
-            while (lineNumber < 15 && myReader.hasNextLine()) {
+            while (myReader.hasNextLine()) {
                 String line = myReader.nextLine();
-                lines.add(line);
-                lineNumber ++;
-
-                // 舊log有14行，新log有13行，最後一行都是time
-                if(line.contains("time")) {
+                if(line.equals("-------------------------------------")) {
+                    isValidLog = true;
                     break;
                 }
+
+                lines.add(line);
             }
             myReader.close();
         } catch (FileNotFoundException e) {
@@ -30,6 +30,6 @@ public class AADLogReader {
     }
 
     public List<String> getResult() {
-        return lines;
+        return isValidLog? lines : null;
     }
 }
