@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,15 +13,26 @@ public class AADLogParser {
         logContent.forEach(line -> {
             String key = line.split(":")[0].trim();
             String value = line.split(":")[1].trim();
+
             if(key.equals("time")) {
                 if(value.contains("min")) {
                     value = value.split("min")[0].trim();
                 } else if(value.contains("h")) {
                     value = String.valueOf(Integer.parseInt(value.split("h")[0].trim()) * 60);
                 }
+            } else if (key.equals("Repeat Anomalies")) {// AAD 新舊 Log 的內容文字不一樣
+                key = "Repeated Anomaly";
+            } else if (key.equals("Repeat Crashes")) {
+                key = "Repeated Crash";
             }
+
             result.put(key, value);
         });
+
+        String uniqueAnomaly = String.valueOf(Integer.parseInt(result.get("Anomaly")) - Integer.parseInt(result.get("Repeated Anomaly")));
+        String uniqueCrash = String.valueOf(Integer.parseInt(result.get("Crash")) - Integer.parseInt(result.get("Repeated Crash")));
+        result.put("Unique Anomaly", uniqueAnomaly);
+        result.put("Unique Crash", uniqueCrash);
     }
 
     private void parsePath(String path) {

@@ -12,10 +12,16 @@ public class AADLogReader {
         try {
             File log = new File(path);
             Scanner myReader = new Scanner(log);
-            while (lineNumber < 14 && myReader.hasNextLine()) {
+
+            while (lineNumber < 15 && myReader.hasNextLine()) {
                 String line = myReader.nextLine();
                 lines.add(line);
                 lineNumber ++;
+
+                // 舊log有14行，新log有13行，最後一行都是time
+                if(line.contains("time")) {
+                    break;
+                }
             }
             myReader.close();
         } catch (FileNotFoundException e) {

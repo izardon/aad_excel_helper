@@ -19,28 +19,39 @@ public class XLSXWriter {
 
     public void write(String fileName, List<Map<String, String>> data) {
         sortData(data);
-        processStateImmutableAnomaly(xlsxData);
-
+        createSheet(AADSheetName.STATE_IMMUTABLE_ANOMALY.getSheetName(), xlsxData);
+        createSheet(AADSheetName.STATE_IMMUTABLE_CRASH.getSheetName(), xlsxData);
+        createSheet(AADSheetName.EVENT_CHANGING_ANOMALY.getSheetName(), xlsxData);
         writeFile(fileName);
     }
 
-    private void processStateImmutableAnomaly(List<Map<String, String>> data) {
-        Sheet sheet = workbook.createSheet("StateImmutableAnomaly");
+    private void createSheet(String sheetName, List<Map<String, String>> data) {
+        Sheet sheet = workbook.createSheet(sheetName);
         List<String> headRowText;
-        if(data.get(0).containsKey("Repeated Anomaly")) {
-            headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total Injected Operations", "Anomaly", "Repeated Anomaly", "Unexpected Anomaly");
-        } else {
-            headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total Injected Operations", "Anomaly", "Repeat Anomalies", "Unexpected Anomaly");
-        }
-        createHeadRow(sheet, headRowText);
+        headRowText = createSheetHeadRow(sheetName);
+        
+        setHeadRowText(sheet, headRowText);
         int rowNum = 1;
         for(Map<String, String> rowText : data) {
-            createRow(sheet, headRowText, rowText, rowNum);
+            setRowText(sheet, headRowText, rowText, rowNum);
             rowNum++;
         }
     }
 
-    private void createHeadRow(Sheet sheet, List<String> headRowText) {
+    private List<String> createSheetHeadRow(String sheetName) {
+        List<String> headRowText = null;
+
+        if(sheetName.equals(AADSheetName.STATE_IMMUTABLE_ANOMALY.getSheetName())) {
+            headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total Injected Operations", "Unique Anomaly");
+        } else if(sheetName.equals(AADSheetName.STATE_IMMUTABLE_CRASH.getSheetName())) {
+            headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total TestRun", "Total Injected Operations", "Crash", "Repeated Crash", "Unique Crash");
+        } else if(sheetName.equals(AADSheetName.EVENT_CHANGING_ANOMALY.getSheetName())) {
+            headRowText = Arrays.asList("AppName", "Operation", "Level", "time", "Total TestRun", "Total Injected Operations", "Crash", "Repeated Crash", "Unique Crash");
+        }
+        return headRowText;
+    }
+
+    private void setHeadRowText(Sheet sheet, List<String> headRowText) {
         Row row = sheet.createRow(0);
         int index = 0;
         for(String text : headRowText) {
@@ -49,7 +60,17 @@ public class XLSXWriter {
         }
     }
 
-    private void createRow(Sheet sheet, List<String> headRowText, Map<String, String> rowText, int rowNum) {
+    private void setRowText(Sheet sheet, List<String> headRowText, Map<String, String> rowText, int rowNum) {
+        if(Arrays.asList(AADSheetName.STATE_IMMUTABLE_ANOMALY.getSheetName(), AADSheetName.STATE_IMMUTABLE_CRASH.getSheetName()).contains(sheet.getSheetName())) {
+            if (!Arrays.asList("RotateOperation","ExitAndReenterOperation").contains(rowText.get("Operation"))) {
+                return;
+            }
+        } else if(Arrays.asList(AADSheetName.EVENT_CHANGING_ANOMALY.getSheetName()).contains(sheet.getSheetName())) {
+            if (!Arrays.asList("EmptyStringOperation","InputZeroOperation", "RandomAsciiOperation", "RandomUTFOperation", "RandomLongStringOperation").contains(rowText.get("Operation"))) {
+                return;
+            }
+        }
+
         Row row = sheet.createRow(rowNum);
         int index = 0;
         for(String headText : headRowText) {
@@ -79,25 +100,14 @@ public class XLSXWriter {
             operations.add(data.get("Operation"));
         });
 
-        appNames.forEach(appName -> {
-            operations.forEach(operation -> {
-                List<Map<String, String>> sortDataBlock = new ArrayList<>(
-                        datas.stream()
-                                .filter(data -> data.get("AppName").equals(appName) && data.get("Operation").equals(operation))
-                                .collect(Collectors.toList())
-                );
-                Collections.sort(sortDataBlock, levelComparator);
-                sortedData.addAll(sortDataBlock);
-            });
-        });
+        appNames.forEach(appName -> operations.forEach(operation -> {
+            List<Map<String, String>> sortDataBlock = datas.stream()
+                    .filter(data -> data.get("AppName").equals(appName) && data.get("Operation").equals(operation)).sorted(levelComparator).collect(Collectors.toList());
+            sortedData.addAll(sortDataBlock);
+        }));
 
         xlsxData = sortedData;
     }
 
-    public Comparator<Map<String, String>> levelComparator = new Comparator<Map<String, String>>() {
-        public int compare(Map<String, String> m1, Map<String, String> m2) {
-            return m1.get("Level").compareTo(m2.get("Level"));
-        }
-    };
-
+    public Comparator<Map<String, String>> levelComparator = Comparator.comparing(m -> m.get("Level"));
 }
